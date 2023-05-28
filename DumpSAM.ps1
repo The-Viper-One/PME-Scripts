@@ -63,9 +63,6 @@ function narrows
         $FieldValueArray
     )
     $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    ###############################################################################
-    #[DllImport("advapi32.dll", SetLastError=true)]
-    #public static extern int RegCloseKey(int hKey);
     $PInvokeMethod = $TypeBuilder.DefineMethod(
         'RegCloseKey',
         [Reflection.MethodAttributes] 'Public, Static',
