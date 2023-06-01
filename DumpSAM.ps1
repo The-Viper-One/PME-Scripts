@@ -1,3 +1,4 @@
+$ErrorActionPreference = "SilentlyContinue"
 function DumpSAM
 {
 
