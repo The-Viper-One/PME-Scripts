@@ -1038,7 +1038,10 @@ if ([priv]::IsUserAnAdmin()) {
     }
 } else {
     Write-Error "Not Admin"
-    }
+            }   
+     }
 }
+
+DumpSAM
 
 DumpSAM
