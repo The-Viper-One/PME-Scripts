@@ -265,27 +265,27 @@ Function DisplaySessionCreds($sessioncreds)
                 {""
                     if ($ticket.ServerName -like "*krbtgt*")
                     {
-                        Write-Host ("    Service Name       : {0}" -f $ticket.ServerName)
+                        Write-Output ("    Service Name       : {0}" -f $ticket.ServerName)
                     }
                     else
                     {
-                        Write-Host ("    Service Name       : {0}" -f $ticket.ServerName)
+                        Write-Output ("    Service Name       : {0}" -f $ticket.ServerName)
                     }
 
-                    Write-Host ("    EncryptionType     : {0}" -f ([ticket.dump+EncTypes]$ticket.EncryptionType))
-                    Write-Host ("    Start/End/MaxRenew : {0}; {1}; {2}" -f $ticket.StartTime, $ticket.EndTime, $ticket.RenewTime)
-                    Write-Host ("    Server Name        : {0}@{1}" -f ($ticket.ServerName -split "/")[1], $ticket.ServerRealm)
-                    Write-Host ("    Client Name        : {0}@{1}" -f $ticket.ClientName, $ticket.ClientRealm)
-                    Write-Host ("    Flags              : {0}" -f $ticket.TicketFlags)
+                    Write-Output ("    EncryptionType     : {0}" -f ([ticket.dump+EncTypes]$ticket.EncryptionType))
+                     Write-Output ("    Start/End/MaxRenew : {0}; {1}; {2}" -f $ticket.StartTime, $ticket.EndTime, $ticket.RenewTime)
+                    Write-Output ("    Server Name        : {0}@{1}" -f ($ticket.ServerName -split "/")[1], $ticket.ServerRealm)
+                     Write-Output ("    Client Name        : {0}@{1}" -f $ticket.ClientName, $ticket.ClientRealm)
+                     Write-Output ("    Flags              : {0}" -f $ticket.TicketFlags)
 
                     if ($ticket.SessionKeyType)
                     {
-                        Write-Host ("    Session Key Type   : {0}`n" -f $ticket.SessionKeyType)
+                        Write-Output ("    Session Key Type   : {0}`n" -f $ticket.SessionKeyType)
                     }
 
-                    Write-Host "    -[Ticket]-"
+                    Write-Output "    -[Ticket]-"
                     ""
-                    Write-Host $ticket.Ticketb64
+                    Write-Output $ticket.Ticketb64
                     ""
                 }
             }
