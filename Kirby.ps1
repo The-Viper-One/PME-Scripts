@@ -285,7 +285,7 @@ Function DisplaySessionCreds($sessioncreds)
 
                     Write-Host "    -[Ticket]-"
                     ""
-                    Write-Output $ticket.Ticketb64
+                    Write-Host $ticket.Ticketb64
                     ""
                 }
             }
