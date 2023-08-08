@@ -1,3 +1,4 @@
+Function Invoke-Kirby {
 $ErrorActionPreference = "SilentlyContinue"
 $systemname = "NT.AUT.*\\"
 
@@ -706,3 +707,5 @@ function main{
 
 $DumpAllTkt = $false
 main
+
+}
