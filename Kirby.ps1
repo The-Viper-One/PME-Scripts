@@ -252,51 +252,47 @@ Function EnumerateLogonSessions()
         return $luids
     }
 
-    Function DisplaySessionCreds($sessioncreds)
+Function DisplaySessionCreds($sessioncreds)
+{
+    foreach ($sessioncred in $sessioncreds)
     {
-        foreach($sessioncred in $sessioncreds)
+        if ($sessioncred.Ticketb64 -ne $null)
         {
-
-            if ($sessioncred.Ticketb64 -ne $null){
-            if((@($sessioncred).Count -gt 0) -and ($sessioncred[0].LogonSession[0].LogonID.LowPart -ne "0") )
+            if ((@($sessioncred).Count -gt 0) -and ($sessioncred[0].LogonSession[0].LogonID.LowPart -ne "0"))
             {
-                $print_object = New-Object psobject
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "UserName" -Value $sessioncred[0].LogonSession.username
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "Domain" -Value $sessioncred[0].LogonSession.LogonDomain
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "LogonId" -Value ("0x{0:x}" -f $sessioncred[0].LogonSession.LogonId.LowPart)
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "UserSid" -Value $sessioncred[0].LogonSession.Sid
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "AuthenticationPackage" -Value $sessioncred[0].LogonSession.AuthenticationPackage
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "LogonType" -Value $sessioncred[0].LogonSession.logonType
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "LogonTime" -Value $sessioncred[0].LogonSession.logonTime
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "LogonServerDnsDomain" -Value $sessioncred[0].LogonSession.DnsDomainName
-                Add-Member -InputObject $print_object -MemberType NoteProperty -Name "UserPrincipalName" -Value $sessioncred[0].LogonSession.Upn
 
-                Write-Host "------------------------------------------------------------------------------------------------------------------"
-                $print_object
-                foreach($ticket in $sessioncred)
-                {
-                    if ($ticket.ServerName -like "*krbtgt*"){Write-Host "    Service Name       : " $ticket.ServerName -ForegroundColor "Yellow"}
-                    Else{Write-Host "    Service Name       : " $ticket.ServerName}
-                    Write-Host "    EncryptionType     : " ([ticket.dump+EncTypes]$ticket.EncryptionType)
-                    Write-Host "    Start/End/MaxRenew : " $ticket.StartTime ";" $ticket.EndTime ";" $ticket.RenewTime
-                    Write-Host "    Server Name        : " $ticket.ServerName.split("/")[1] "@" $ticket.ServerRealm
-                    Write-Host "    Client Name        : " $ticket.ClientName "@" $ticket.ClientRealm
-                    Write-Host "    Flags              : " $ticket.TicketFlags
-                    if($ticket.SessionKeyType){Write-Host "    Session Key Type   : " $ticket.SessionKeyType "`n"}
-        
-                        Write-Host "Ticket" -ForegroundColor "Yellow"
-                        ""
-						Write-Output $ticket.Ticketb64
-                        ""
-          
-                    
+                foreach ($ticket in $sessioncred)
+                {""
+                    if ($ticket.ServerName -like "*krbtgt*")
+                    {
+                        Write-Host ("    Service Name       : {0}" -f $ticket.ServerName)
+                    }
+                    else
+                    {
+                        Write-Host ("    Service Name       : {0}" -f $ticket.ServerName)
+                    }
+
+                    Write-Host ("    EncryptionType     : {0}" -f ([ticket.dump+EncTypes]$ticket.EncryptionType))
+                    Write-Host ("    Start/End/MaxRenew : {0}; {1}; {2}" -f $ticket.StartTime, $ticket.EndTime, $ticket.RenewTime)
+                    Write-Host ("    Server Name        : {0}@{1}" -f ($ticket.ServerName -split "/")[1], $ticket.ServerRealm)
+                    Write-Host ("    Client Name        : {0}@{1}" -f $ticket.ClientName, $ticket.ClientRealm)
+                    Write-Host ("    Flags              : {0}" -f $ticket.TicketFlags)
+
+                    if ($ticket.SessionKeyType)
+                    {
+                        Write-Host ("    Session Key Type   : {0}`n" -f $ticket.SessionKeyType)
+                    }
+
+                    Write-Host "    -[Ticket]-"
+                    ""
+                    Write-Output $ticket.Ticketb64
+                    ""
                 }
-                #Write-Host "------------------------------------------------------------------------------------------------------------------"
-                #Write-Host "`n`n"
             }
         }
     }
-    }
+}
+
 function main{
 
     # Initializing DotNet and Add-Type with Structures and LSA Functions
