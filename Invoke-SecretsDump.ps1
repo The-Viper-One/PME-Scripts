@@ -102,5 +102,3 @@ DumpSAM
         $emptyPasswordUsers | ForEach-Object { Write-Output $_ }
     }
 }
-
-Invoke-SecretsDump
